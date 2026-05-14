@@ -3,122 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Portefeuille Euronext</title>
+    <title>TABLEAU DE BORD PEA - GÉANT</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 40px; background-color: #f8f9fa; color: #333; }
-        h1 { color: #2c3e50; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #edf2f7; }
-        th { background-color: #f1f5f9; font-weight: 600; }
-        .positif { color: #2ecc71; font-weight: bold; }
-        .negatif { color: #e74c3c; font-weight: bold; }
-        .total-card { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; display: inline-block; min-width: 250px; }
-        .total-val { font-size: 1.8em; font-weight: bold; margin-top: 5px; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        button:hover { background: #2980b9; }
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --green: #10b981;
+            --red: #ef4444;
+            --blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Impact', 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- GRANDS BLOCS DE PERF (PREND BEAUCOUP DE PLACE) --- */
+        .grid-blocks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .giant-card {
+            background-color: var(--card);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 2px solid #334155;
+            text-align: center;
+        }
+
+        .label {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: 2px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .value {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* --- COULEURS DES GAINS --- */
+        .txt-green { color: var(--green); }
+        .txt-red { color: var(--red); }
+
+        /* --- ZONE GRAPHIQUE --- */
+        .chart-box {
+            background-color: var(--card);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #334155;
+            margin-bottom: 40px;
+        }
+
+        .chart-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            background-color: #334155;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+            transition: 0.2s;
+        }
+
+        .btn:hover { background-color: #475569; }
+        .btn.active { background-color: var(--blue); }
+
+        /* --- PANNEAU DE SECOURS MANUEL --- */
+        .fallback-box {
+            background-color: #1e1b4b;
+            border: 2px dashed #4338ca;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: 40px;
+        }
+
+        .fallback-box input {
+            background: #312e81;
+            border: 1px solid #4338ca;
+            color: white;
+            padding: 10px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            width: 120px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* --- INFOS BRUTES --- */
+        .raw-table {
+            width: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .raw-table th, .raw-table td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+        .raw-table th { background: #111827; color: var(--muted); }
     </style>
 </head>
 <body>
 
-    <h1>Visualisation de ma Position Euronext</h1>
-    
-    <button onclick="actualiserPortefeuille()">🔄 Actualiser le cours</button>
+    <div class="container">
+        
+        <h1 style="font-size: 2.5rem; margin-bottom: 30px; text-align: center; letter-spacing: 2px;">⚡ PORTFOLIO NASDAQ 100 ⚡</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Nom / Ticker</th>
-                <th>Quantité</th>
-                <th>Prix d'achat</th>
-                <th>Cours Actuel</th>
-                <th>Valeur Actuelle</th>
-                <th>Plus/Moins-value</th>
-            </tr>
-        </thead>
-        <tbody id="portfolio-table">
+        <div class="fallback-box">
+            <span>🛠️ En cas de bug de l'API automatique, forcez le prix ici en direct : </span>
+            <input type="number" id="manual-price" step="0.01" placeholder="Ex: 102.5" oninput="forcerCoursManuel(this.value)"> <span>€</span>
+        </div>
+
+        <div class="grid-blocks">
+            <div class="giant-card">
+                <div class="label">Valeur Actuelle</div>
+                <div class="value id-green" id="box-val-totale">-- €</div>
+            </div>
+            <div class="giant-card">
+                <div class="label">Plus/Moins-Value Globale</div>
+                <div class="value" id="box-gain-total">-- €</div>
+            </div>
+            <div class="giant-card">
+                <div class="label">Cours du Nasdaq ETF</div>
+                <div class="value style="color: var(--blue);" id="box-cours-actuel">-- €</div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-buttons">
+                <button class="btn active" onclick="changerPeriode('1d', '1m', this)">INTRADAY</button>
+                <button class="btn" onclick="changerPeriode('1mo', '1d', this)">1 MOIS</button>
+                <button class="btn" onclick="changerPeriode('3mo', '1d', this)">1 TRIMESTRE</button>
+                <button class="btn" onclick="changerPeriode('1y', '1d', this)">1 AN</button>
+            </div>
+            <div style="position: relative; height: 350px;">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <table class="raw-table">
+            <thead>
+                <tr>
+                    <th>Actif</th>
+                    <th>Quantité</th>
+                    <th>Prix Achat Moyen</th>
+                    <th>Total Investi</th>
+                    <th>Statut API</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Amundi Nasdaq 100 Acc (ANX.PA)</strong></td>
+                    <td>1 224</td>
+                    <td>93,045 €</td>
+                    <td id="tab-investi">-- €</td>
+                    <td id="tab-status" style="color: orange;">Connexion...</td>
+                </tr>
             </tbody>
-    </table>
+        </table>
 
-    <div class="total-card">
-        <div>Valeur Totale du Portefeuille</div>
-        <div class="total-val" id="total-portefeuille">--.-- €</div>
     </div>
 
     <script>
-        // 1. VOS DONNÉES REELLES (Exemple : 15 parts achetées à 150.50 €)
-        // ANX.PA est le symbole Yahoo Finance pour l'Amundi Nasdaq 100 (Acc) sur Euronext Paris
-        const mesPositions = [
-            { 
-                nom: 'Amundi Nasdaq 100 Acc (Euronext)', 
-                ticker: 'ANX.PA', 
-                quantite: 1224, 
-                prixAchat: 93.045
-            }
-        ];
+        // CONFIGURATION FIXE DE VOS DONNÉES
+        const QUANTITE = 1224;
+        const PRIX_ACHAT = 93.045;
+        const TICKER = 'ANX.PA';
+        const TOTAL_INVESTI = QUANTITE * PRIX_ACHAT;
 
-        // Utilisation d'une API publique légère pour récupérer les données Yahoo Finance directement en HTML
-        async function obtenirCoursEuronext(ticker) {
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                // Extraction du prix le plus récent (Regular Market Price)
-                const meta = data.chart.result[0].meta;
-                return meta.regularMarketPrice;
-            } catch (error) {
-                console.error(`Erreur de récupération pour ${ticker}:`, error);
-                return null;
-            }
-        }
+        let chartInstance = null;
+        let dernierCoursSauvegarde = 0;
 
-        async function actualiserPortefeuille() {
-            const tbody = document.getElementById('portfolio-table');
-            tbody.innerHTML = '<tr><td colspan="6">Mise à jour du cours...</td></tr>';
+        document.getElementById('tab-investi').innerText = TOTAL_INVESTI.toFixed(2) + " €";
+
+        // CALCULS GENERAUX ET AFFICHAGE BRUT
+        function recalculerTout(cours) {
+            dernierCoursSauvegarde = cours;
+            const valeurActuelle = cours * QUANTITE;
+            const plusValue = valeurActuelle - TOTAL_INVESTI;
+            const perfPourcent = (plusValue / TOTAL_INVESTI) * 100;
+
+            // Remplissage des blocs géants
+            document.getElementById('box-cours-actuel').innerText = cours.toFixed(2) + " €";
+            document.getElementById('box-val-totale').innerText = valeurActuelle.toFixed(2) + " €";
             
-            let htmlContenu = '';
-            let valeurTotalePortefeuille = 0;
-
-            for (let position of mesPositions) {
-                const coursActuel = await obtenirCoursEuronext(position.ticker);
-                
-                if (coursActuel) {
-                    const valeurActuelle = coursActuel * position.quantite;
-                    const valeurInitiale = position.prixAchat * position.quantite;
-                    const plusValue = valeurActuelle - valeurInitiale;
-                    const performancePourcent = ((coursActuel - position.prixAchat) / position.prixAchat) * 100;
-
-                    valeurTotalePortefeuille += valeurActuelle;
-
-                    const classeStyle = plusValue >= 0 ? 'positif' : 'negatif';
-                    const signe = plusValue >= 0 ? '+' : '';
-
-                    htmlContenu += `
-                        <tr>
-                            <td><strong>${position.nom}</strong> <br><small style="color:#7f8c8d">${position.ticker}</small></td>
-                            <td>${position.quantite}</td>
-                            <td>${position.prixAchat.toFixed(2)} €</td>
-                            <td>${coursActuel.toFixed(2)} €</td>
-                            <td>${valeurActuelle.toFixed(2)} €</td>
-                            <td class="${classeStyle}">${signe}${plusValue.toFixed(2)} € (${signe}${performancePourcent.toFixed(2)}%)</td>
-                        </tr>
-                    `;
-                } else {
-                    htmlContenu += `
-                        <tr>
-                            <td><strong>${position.nom}</strong></td>
-                            <td colspan="5" style="color: red;">Erreur lors de la récupération du cours Euronext</td>
-                        </tr>
-                    `;
-                }
+            const boxGain = document.getElementById('box-gain-total');
+            const signe = plusValue >= 0 ? '+' : '';
+            boxGain.innerText = `${signe}${plusValue.toFixed(2)} € (${signe}${perfPourcent.toFixed(2)}%)`;
+            
+            if (plusValue >= 0) {
+                boxGain.className = "value txt-green";
+            } else {
+                boxGain.className = "value txt-red";
             }
-
-            tbody.innerHTML = htmlContenu;
-            document.getElementById('total-portefeuille').innerText = `${valeurTotalePortefeuille.toFixed(2)} €`;
         }
 
-        // Chargement automatique
-        actualiserPortefeuille();
+        // FORCE MANUELLE
+        function forceNoCorsCalcul() {
+             recalculerTout(98.50); // Fallback arbitraire au démarrage si l'API met du temps
+        }
+
+        function forcerCoursManuel(valeur) {
+            const prix = parseFloat(valeur);
+            if (prix > 0) {
+                document.getElementById('tab-status').innerText = "Mode Manuel 🛠️";
+                document.getElementById('tab-status').style.color = "#3b82f6";
+                recalculerTout(prix);
+            }
+        }
+
+        // INTEGRATION DU PROXY ANTI-BLOCAGE CORS
+        async function fetchYahooData(range, interval) {
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${TICKER}?range=${range}&interval=${interval}`;
+            // Allorigins récupère le flux sans blocage de domaine
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
+            
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            // Le contenu brut renvoyé par le proxy est une chaîne qu'on repasse en JSON
+            return JSON.parse(data.contents);
+        }
+
+        async function chargerDonneesAutomatiques() {
+            try {
+                const json = await fetchYahooData('1d', '1m');
+                const result = json.chart.result[0];
+                const coursActuel = result.meta.regularMarketPrice;
+                
+                document.getElementById('tab-status').innerText = "Connecté ✅";
+                document.getElementById('tab-status').style.color = "#10b981";
+                
+                recalculerTout(coursActuel);
+                tracerGraphique(result.timestamp, result.indicators.quote[0].close, '1d');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('tab-status').innerText = "Erreur Proxy - Mode démo activé";
+                document.getElementById('tab-status').style.color = "#ef4444";
+                forceNoCorsCalcul();
+            }
+        }
+
+        // DESSIN DU GRAPHIQUE
+        function tracerGraphique(timestamps, prix, range) {
+            if(!timestamps || !prix) return;
+
+            const labels = timestamps.map(ts => {
+                const d = new Date(ts * 1000);
+                return range === '1d' ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : d.toLocaleDateString([], {day: '2-digit', month: '2-digit'});
+            });
+
+            const prixNettoyes = prix.map((p, i) => p || prix[i-1] || PRIX_ACHAT);
+
+            if (chartInstance) { chartInstance.destroy(); }
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: prixNettoyes,
+                        borderColor: '#3b82f6',
+                        borderWidth: 3,
+                        pointRadius: range === '1d' ? 0 : 2,
+                        fill: false,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', maxTicksLimit: 10 }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        async function changerPeriode(range, interval, bouton) {
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            bouton.classList.add('active');
+            try {
+                const json = await fetchYahooData(range, interval);
+                const result = json.chart.result[0];
+                tracerGraphique(result.timestamp, result.indicators.quote[0].close, range);
+            } catch(e) {
+                console.log("Erreur de changement de période");
+            }
+        }
+
+        // Lancement au chargement de la page
+        chargerDonneesAutomatiques();
     </script>
 </body>
 </html>
