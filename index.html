@@ -3,193 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Portefeuille PEA avec Graphique</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Mon Portefeuille Euronext</title>
     <style>
-        :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --primary: #3498db;
-            --primary-hover: #2980b9;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --border-color: #e2e8f0;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 30px 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 20px;
-        }
-
-        h1 { margin: 0; font-size: 1.8rem; font-weight: 700; }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        button:hover { background-color: var(--primary-hover); }
-
-        /* --- ZONE GRAPHIQUE --- */
-        .chart-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            border: 1px solid var(--border-color);
-            margin-bottom: 30px;
-        }
-
-        .chart-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .btn-period {
-            background-color: #e2e8f0;
-            color: var(--text-main);
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            border-radius: 6px;
-        }
-
-        .btn-period.active {
-            background-color: var(--text-main);
-            color: white;
-        }
-
-        /* --- CARTE DU TOTAL --- */
-        .total-card {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            display: inline-block;
-            min-width: 280px;
-        }
-
-        .total-label { font-size: 0.9rem; text-transform: uppercase; opacity: 0.8; }
-        .total-val { font-size: 2.3rem; font-weight: 700; margin-top: 5px; }
-
-        /* --- TABLEAU --- */
-        .table-container {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: #f8fafc; color: var(--text-muted); font-size: 0.75rem; padding: 16px 20px; border-bottom: 1px solid var(--border-color); text-transform: uppercase; }
-        td { padding: 18px 20px; border-bottom: 1px solid var(--border-color); }
-        .ticker-name { font-weight: 600; }
-        .ticker-sub { font-size: 0.8rem; color: var(--text-muted); }
-        .perf-badge { display: inline-block; padding: 6px 12px; border-radius: 6px; font-weight: 600; }
-        .positif { background-color: rgba(46, 204, 113, 0.15); color: var(--success); }
-        .negatif { background-color: rgba(231, 76, 60, 0.15); color: var(--danger); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 40px; background-color: #f8f9fa; color: #333; }
+        h1 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background-color: #f1f5f9; font-weight: 600; }
+        .positif { color: #2ecc71; font-weight: bold; }
+        .negatif { color: #e74c3c; font-weight: bold; }
+        .total-card { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; display: inline-block; min-width: 250px; }
+        .total-val { font-size: 1.8em; font-weight: bold; margin-top: 5px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        button:hover { background: #2980b9; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>Visualisation PEA</h1>
-            <button onclick="initialiserPage()">🔄 Actualiser</button>
-        </header>
+    <h1>Visualisation de ma Position Euronext</h1>
+    
+    <button onclick="actualiserPortefeuille()">🔄 Actualiser le cours</button>
 
-        <div class="chart-card">
-            <div class="chart-controls">
-                <button class="btn-period active" onclick="changerPeriode('1d', '1m', this)">Intraday</button>
-                <button class="btn-period" onclick="changerPeriode('1mo', '1d', this)">1 Mois</button>
-                <button class="btn-period" onclick="changerPeriode('3mo', '1d', this)">1 Trimestre</button>
-                <button class="btn-period" onclick="changerPeriode('1y', '1d', this)">1 An</button>
-            </div>
-            <div style="position: relative; height:300px; width:100%">
-                <canvas id="historiqueChart"></canvas>
-            </div>
-        </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom / Ticker</th>
+                <th>Quantité</th>
+                <th>Prix d'achat</th>
+                <th>Cours Actuel</th>
+                <th>Valeur Actuelle</th>
+                <th>Plus/Moins-value</th>
+            </tr>
+        </thead>
+        <tbody id="portfolio-table">
+            </tbody>
+    </table>
 
-        <div class="total-card">
-            <div class="total-label">Valeur Totale</div>
-            <div class="total-val" id="total-portefeuille">--.-- €</div>
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nom / Ticker</th>
-                        <th>Quantité</th>
-                        <th>Prix d'achat</th>
-                        <th>Cours Actuel</th>
-                        <th>Valeur Actuelle</th>
-                        <th>Plus/Moins-value</th>
-                    </tr>
-                </thead>
-                <tbody id="portfolio-table">
-                    </tbody>
-            </table>
-        </div>
+    <div class="total-card">
+        <div>Valeur Totale du Portefeuille</div>
+        <div class="total-val" id="total-portefeuille">--.-- €</div>
     </div>
 
     <script>
-        // Vos données réelles
+        // 1. VOS DONNÉES REELLES (Exemple : 15 parts achetées à 150.50 €)
+        // ANX.PA est le symbole Yahoo Finance pour l'Amundi Nasdaq 100 (Acc) sur Euronext Paris
         const mesPositions = [
-            { nom: 'Amundi Nasdaq 100 Acc', ticker: 'ANX.PA', quantite: 15, prixAchat: 150.50 }
+            { 
+                nom: 'Amundi Nasdaq 100 Acc (Euronext)', 
+                ticker: 'ANX.PA', 
+                quantite: 1224, 
+                prixAchat: 93.045
+            }
         ];
 
-        let monGraphique = null;
-
-        // Fonction principale au chargement
-        async function initialiserPage() {
-            await actualiserTableau();
-            // Charger le graphique intraday par défaut
-            await chargerGraphique('ANX.PA', '1d', '1m');
+        // Utilisation d'une API publique légère pour récupérer les données Yahoo Finance directement en HTML
+        async function obtenirCoursEuronext(ticker) {
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Extraction du prix le plus récent (Regular Market Price)
+                const meta = data.chart.result[0].meta;
+                return meta.regularMarketPrice;
+            } catch (error) {
+                console.error(`Erreur de récupération pour ${ticker}:`, error);
+                return null;
+            }
         }
 
-        async function actualiserTableau() {
+        async function actualiserPortefeuille() {
             const tbody = document.getElementById('portfolio-table');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Mise à jour...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">Mise à jour du cours...</td></tr>';
             
             let htmlContenu = '';
             let valeurTotalePortefeuille = 0;
 
-            // On utilise l'URL 1d pour avoir le cours actuel le plus récent
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/ANX.PA?interval=1d&range=1d`;
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                const coursActuel = data.chart.result[0].meta.regularMarketPrice;
-
-                for (let position of mesPositions) {
+            for (let position of mesPositions) {
+                const coursActuel = await obtenirCoursEuronext(position.ticker);
+                
+                if (coursActuel) {
                     const valeurActuelle = coursActuel * position.quantite;
                     const valeurInitiale = position.prixAchat * position.quantite;
                     const plusValue = valeurActuelle - valeurInitiale;
@@ -202,101 +95,30 @@
 
                     htmlContenu += `
                         <tr>
-                            <td>
-                                <div class="ticker-name">${position.nom}</div>
-                                <div class="ticker-sub">${position.ticker}</div>
-                            </td>
+                            <td><strong>${position.nom}</strong> <br><small style="color:#7f8c8d">${position.ticker}</small></td>
                             <td>${position.quantite}</td>
                             <td>${position.prixAchat.toFixed(2)} €</td>
-                            <td style="font-weight: 500;">${coursActuel.toFixed(2)} €</td>
-                            <td style="font-weight: 600;">${valeurActuelle.toFixed(2)} €</td>
-                            <td>
-                                <span class="perf-badge ${classeStyle}">
-                                    ${signe}${plusValue.toFixed(2)} € (${signe}${performancePourcent.toFixed(2)}%)
-                                </span>
-                            </td>
+                            <td>${coursActuel.toFixed(2)} €</td>
+                            <td>${valeurActuelle.toFixed(2)} €</td>
+                            <td class="${classeStyle}">${signe}${plusValue.toFixed(2)} € (${signe}${performancePourcent.toFixed(2)}%)</td>
+                        </tr>
+                    `;
+                } else {
+                    htmlContenu += `
+                        <tr>
+                            <td><strong>${position.nom}</strong></td>
+                            <td colspan="5" style="color: red;">Erreur lors de la récupération du cours Euronext</td>
                         </tr>
                     `;
                 }
-                tbody.innerHTML = htmlContenu;
-                document.getElementById('total-portefeuille').innerText = `${valeurTotalePortefeuille.toFixed(2)} €`;
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="6" style="color:var(--danger);">Erreur de chargement des données.</td></tr>';
             }
+
+            tbody.innerHTML = htmlContenu;
+            document.getElementById('total-portefeuille').innerText = `${valeurTotalePortefeuille.toFixed(2)} €`;
         }
 
-        // Gestion du graphique historique
-        async function chargerGraphique(ticker, range, interval) {
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${range}&interval=${interval}`;
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                const result = data.chart.result[0];
-                const timestamps = result.timestamp;
-                const prixHistoriques = result.indicators.quote[0].close;
-
-                // Convertir les timestamps en dates lisibles
-                const labelsDates = timestamps.map(ts => {
-                    const date = new Date(ts * 1000);
-                    if (range === '1d') {
-                        // Pour l'intraday, on affiche l'heure (HH:MM)
-                        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    } else {
-                        // Pour le reste, on affiche le jour (JJ/MM)
-                        return date.toLocaleDateString([], {day: '2-digit', month: '2-digit'});
-                    }
-                });
-
-                // Nettoyer les valeurs nulles éventuelles dans les prix (marché fermé brièvement)
-                const prixNettoyes = prixHistoriques.map((p, i) => p || prixHistoriques[i-1] || prixHistoriques[i+1]);
-
-                // Si le graphique existe déjà, on le détruit pour le recréer proprement
-                if (monGraphique) { monGraphique.destroy(); }
-
-                const ctx = document.getElementById('historiqueChart').getContext('2d');
-                monGraphique = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labelsDates,
-                        datasets: [{
-                            label: 'Cours de l\'ETF (€)',
-                            data: prixNettoyes,
-                            borderColor: '#3498db',
-                            backgroundColor: 'rgba(52, 152, 219, 0.05)',
-                            borderWidth: 2,
-                            pointRadius: range === '1d' ? 0 : 1, // Pas de points pour l'intraday (trop dense)
-                            fill: true,
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
-                            y: { grid: { color: '#f1f5f9' } }
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Impossible de charger le graphique :", error);
-            }
-        }
-
-        // Action au clic sur les boutons de périodes
-        function changerPeriode(range, interval, bouton) {
-            // Changer le style du bouton actif
-            document.querySelectorAll('.btn-period').forEach(btn => btn.classList.remove('active'));
-            bouton.classList.add('active');
-            
-            // Recharger les données du graphique
-            chargerGraphique('ANX.PA', range, interval);
-        }
-
-        // Lancement initial
-        initialiserPage();
+        // Chargement automatique
+        actualiserPortefeuille();
     </script>
 </body>
 </html>
